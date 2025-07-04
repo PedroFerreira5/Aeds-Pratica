@@ -12,19 +12,26 @@ void multiplicar_matriz(Vetor *matriz, int escalar) {
 
 void transpor_matriz(Vetor *matriz) {
     int temp[TAM * TAM];
-    int *src = &(*matriz)[0][0];
+    int *orig = &(*matriz)[0][0];
+    int *dest;
 
-    for (int i = 0; i < TAM; i++) {
-        for (int j = 0; j < TAM; j++) {
-            *(temp + j * TAM + i) = *(src + i * TAM + j);
-        }
+    for (int offset = 0; offset < TAM * TAM; offset++) {
+        int linha = offset / TAM; //offset deslocamento em relação ao início
+        int coluna = offset % TAM;
+        dest = temp + coluna * TAM + linha;
+
+        *dest = *(orig + offset);
     }
 
+    // Copiar de volta usando apenas ponteiros
+    int *src = temp;
     int *dst = &(*matriz)[0][0];
-    for (int i = 0; i < TAM * TAM; i++) {
-        *(dst + i) = *(temp + i);
+    int *fim = dst + TAM * TAM;
+    while (dst < fim) {
+        *dst++ = *src++;
     }
 }
+
 
 void inverter_colunas(Vetor *matriz) {
     int *linha = &(*matriz)[0][0];
