@@ -1,7 +1,7 @@
 #ifndef OPERACOES_MATRIZES_H
 #define OPERACOES_MATRIZES_H
 
-const int TAM = 128;
+#define TAM 128
 typedef int Vetor[TAM][TAM];
 
 // Multiplica todos os elementos da matriz por um valor
