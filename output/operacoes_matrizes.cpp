@@ -47,7 +47,7 @@ void inverter_colunas(Vetor *matriz) {
 
 void inverter_linhas(Vetor *matriz) {
     int *cima = &(*matriz)[0][0];
-    int *baixo = &(*matriz)[(TAM - 1) * TAM];
+    int *baixo = cima + (TAM - 1) * TAM;
 
     for (int i = 0; i < TAM / 2; i++) {
         int *ptr_cima = cima;
