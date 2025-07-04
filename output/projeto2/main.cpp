@@ -22,43 +22,44 @@ using namespace std;
  */
 void lerImagem(const std::string& nomeArquivo, int*& dados, int& linhas, int& colunas, int& maxValor) {
     ifstream arquivo(nomeArquivo);
-    
+
     if (!arquivo.is_open()) {
         cout << "Erro: não foi possível abrir o arquivo " << nomeArquivo << endl;
         return;
     }
-    
+
     string formato;
     arquivo >> formato;
-    
+
     // Verifica se é formato PGM (P2 para ASCII)
     if (formato != "P2") {
         cout << "Erro: formato de arquivo não suportado. Esperado P2 (PGM ASCII)" << endl;
         arquivo.close();
         return;
     }
-    
+
     // Lê dimensões e valor máximo
     arquivo >> colunas >> linhas >> maxValor;
-    
+
     // Libera memória anterior se existir
     if (dados != nullptr) {
         delete[] dados;
     }
-    
+
     // Aloca memória para a nova imagem
     dados = new int[linhas * colunas];
-    
+
     // Lê os pixels da imagem
     int* ptr = dados;
-    for (int i = 0; i < linhas * colunas; i++) {
+    while (ptr < dados + linhas * colunas) {
         arquivo >> *ptr;
         ptr++;
     }
-    
+
     arquivo.close();
     cout << "Imagem carregada com sucesso: " << colunas << "x" << linhas << " pixels" << endl;
 }
+
 
 /*
  * Função: escreverImagem
@@ -69,30 +70,29 @@ void escreverImagem(const std::string& nomeArquivo, int* dados, int linhas, int 
         cout << "Erro: nenhuma imagem carregada para salvar" << endl;
         return;
     }
-    
+
     ofstream arquivo(nomeArquivo);
-    
+
     if (!arquivo.is_open()) {
         cout << "Erro: não foi possível criar o arquivo " << nomeArquivo << endl;
         return;
     }
-    
+
     // Escreve cabeçalho PGM
     arquivo << "P2" << endl;
     arquivo << colunas << " " << linhas << endl;
     arquivo << maxValor << endl;
-    
+
     // Escreve os pixels
     int* ptr = dados;
-    for (int i = 0; i < linhas; i++) {
-        for (int j = 0; j < colunas; j++) {
-            arquivo << *ptr;
-            if (j < colunas - 1) arquivo << " ";
-            ptr++;
+    while (ptr < dados + linhas * colunas) {
+        arquivo << *ptr;
+        ptr++;
+        if (ptr < dados + linhas * colunas) {
+            arquivo << " ";
         }
-        arquivo << endl;
     }
-    
+
     arquivo.close();
     cout << "Imagem salva com sucesso: " << nomeArquivo << endl;
 }
@@ -106,16 +106,16 @@ void escurecerImagem(int* dados, int linhas, int colunas, int maxValor, int fato
         cout << "Erro: nenhuma imagem carregada" << endl;
         return;
     }
-    
+
     int* ptr = dados;
-    for (int i = 0; i < linhas * colunas; i++) {
-        // Subtrai o fator, garantindo que não fique negativo
+    while (ptr < dados + linhas * colunas) {
         *ptr = max(0, *ptr - fator);
         ptr++;
     }
-    
+
     cout << "Imagem escurecida com fator " << fator << endl;
 }
+
 
 /*
  * Função: clarearImagem
@@ -126,41 +126,48 @@ void clarearImagem(int* dados, int linhas, int colunas, int maxValor, int fator)
         cout << "Erro: nenhuma imagem carregada" << endl;
         return;
     }
-    
+
     int* ptr = dados;
-    for (int i = 0; i < linhas * colunas; i++) {
-        // Soma o fator, garantindo que não ultrapasse o valor máximo
+    while (ptr < dados + linhas * colunas) {
         *ptr = min(maxValor, *ptr + fator);
         ptr++;
     }
-    
+
     cout << "Imagem clareada com fator " << fator << endl;
 }
+
 
 /*
  * Função: rotacionarDireita
  * Objetivo: rotaciona a imagem 90 graus no sentido horário
  */
-void rotacionarDireita(int* dados, int linhas, int colunas, int*& novaImagem) {
+
+ void rotacionarDireita(int* dados, int linhas, int colunas, int*& novaImagem) {
     if (dados == nullptr) {
         cout << "Erro: nenhuma imagem carregada" << endl;
         return;
     }
-    
-    // Aloca memória para a nova imagem (dimensões invertidas)
+
     novaImagem = new int[linhas * colunas];
-    
-    // Rotação 90° horário: (i,j) -> (j, linhas-1-i)
-    for (int i = 0; i < linhas; i++) {
-        for (int j = 0; j < colunas; j++) {
-            int* ptrOriginal = dados + (i * colunas + j);
-            int* ptrNova = novaImagem + (j * linhas + (linhas - 1 - i));
-            *ptrNova = *ptrOriginal;
+
+    int* ptrOrigem = dados;
+    int linha = 0;
+    int coluna = 0;
+
+    while (linha < linhas) {
+        coluna = 0;
+        while (coluna < colunas) {
+            int* destino = novaImagem + coluna * linhas + (linhas - 1 - linha);
+            *destino = *ptrOrigem;
+            ptrOrigem++;
+            coluna++;
         }
+        linha++;
     }
-    
+
     cout << "Imagem rotacionada 90° para direita" << endl;
 }
+
 
 /*
  * Função: rotacionarEsquerda
@@ -171,21 +178,28 @@ void rotacionarEsquerda(int* dados, int linhas, int colunas, int*& novaImagem) {
         cout << "Erro: nenhuma imagem carregada" << endl;
         return;
     }
-    
-    // Aloca memória para a nova imagem (dimensões invertidas)
+
     novaImagem = new int[linhas * colunas];
+
+    int* ptrOrigem = dados;
+    int* ptrDestino;
     
-    // Rotação 90° anti-horário: (i,j) -> (colunas-1-j, i)
-    for (int i = 0; i < linhas; i++) {
-        for (int j = 0; j < colunas; j++) {
-            int* ptrOriginal = dados + (i * colunas + j);
-            int* ptrNova = novaImagem + ((colunas - 1 - j) * linhas + i);
-            *ptrNova = *ptrOriginal;
+    int linha = 0, coluna = 0;
+    
+    while (linha < linhas) {
+        coluna = 0;
+        while (coluna < colunas) {
+            ptrDestino = novaImagem + (colunas - 1 - coluna) * linhas + linha;
+            *ptrDestino = *ptrOrigem;
+            ptrOrigem++;
+            coluna++;
         }
+        linha++;
     }
-    
+
     cout << "Imagem rotacionada 90° para esquerda" << endl;
 }
+
 
 /*
  * Função: negativaImagem
@@ -196,16 +210,16 @@ void negativaImagem(int* dados, int linhas, int colunas, int maxValor) {
         cout << "Erro: nenhuma imagem carregada" << endl;
         return;
     }
-    
+
     int* ptr = dados;
-    for (int i = 0; i < linhas * colunas; i++) {
-        // Inverte o valor: pixel_novo = maxValor - pixel_original
+    while (ptr < dados + linhas * colunas) {
         *ptr = maxValor - *ptr;
         ptr++;
     }
-    
+
     cout << "Negativa da imagem aplicada" << endl;
 }
+
 
 /*
  * Função: binarizarImagem
@@ -216,16 +230,16 @@ void binarizarImagem(int* dados, int linhas, int colunas, int maxValor, int limi
         cout << "Erro: nenhuma imagem carregada" << endl;
         return;
     }
-    
+
     int* ptr = dados;
-    for (int i = 0; i < linhas * colunas; i++) {
-        // Se pixel >= limiar, vira branco (maxValor), senão vira preto (0)
+    while (ptr < dados + linhas * colunas) {
         *ptr = (*ptr >= limiar) ? maxValor : 0;
         ptr++;
     }
-    
+
     cout << "Imagem binarizada com limiar " << limiar << endl;
 }
+
 
 /*
  * Função: iconizarImagem
@@ -236,36 +250,37 @@ void iconizarImagem(int* dados, int linhas, int colunas, int*& novaImagem) {
         cout << "Erro: nenhuma imagem carregada" << endl;
         return;
     }
-    
+
     const int TAMANHO_ICONE = 64;
-    
-    // Aloca memória para a imagem iconizada
     novaImagem = new int[TAMANHO_ICONE * TAMANHO_ICONE];
-    
-    // Calcula fatores de escala
+
     double escalaX = (double)colunas / TAMANHO_ICONE;
     double escalaY = (double)linhas / TAMANHO_ICONE;
+
+    int* ptrOrigem = dados;
+    int* ptrIcone = novaImagem;
     
-    // Redimensiona usando amostragem simples (nearest neighbor)
-    for (int i = 0; i < TAMANHO_ICONE; i++) {
-        for (int j = 0; j < TAMANHO_ICONE; j++) {
-            // Mapeia coordenadas do ícone para a imagem original
+    int i = 0, j = 0;
+    while (i < TAMANHO_ICONE) {
+        j = 0;
+        while (j < TAMANHO_ICONE) {
             int origemX = (int)(j * escalaX);
             int origemY = (int)(i * escalaY);
             
-            // Garante que não ultrapasse os limites
             origemX = min(origemX, colunas - 1);
             origemY = min(origemY, linhas - 1);
             
-            int* ptrOriginal = dados + (origemY * colunas + origemX);
-            int* ptrIcone = novaImagem + (i * TAMANHO_ICONE + j);
-            
-            *ptrIcone = *ptrOriginal;
+            ptrOrigem = dados + (origemY * colunas + origemX);
+            *ptrIcone = *ptrOrigem;
+            ptrIcone++;
+            j++;
         }
+        i++;
     }
-    
+
     cout << "Imagem iconizada para 64x64 pixels" << endl;
 }
+
 
 // ========== FUNÇÃO PRINCIPAL ==========
 int main() {
